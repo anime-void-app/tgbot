@@ -86,8 +86,8 @@ export default {
       return json({ error: "Wrong setup password." }, 401);
     }
 
-    if (url.pathname === "/start" && (!env.VK_ACCESS_TOKEN || !env.DISCORD_WEBHOOK_URL)) {
-      return json({ error: "Add VK_ACCESS_TOKEN and DISCORD_WEBHOOK_URL in Cloudflare Worker secrets first." }, 503);
+    if (url.pathname === "/start" && (!env.VK_ACCESS_TOKEN || !env.DISCORD_BOT_TOKEN || !env.DISCORD_CHANNEL_ID)) {
+      return json({ error: "Add VK_ACCESS_TOKEN, DISCORD_BOT_TOKEN and DISCORD_CHANNEL_ID in Cloudflare Worker settings first." }, 503);
     }
 
     const id = env.BRIDGE.idFromName("funtime-main");
@@ -307,19 +307,22 @@ export class VkBridge {
   }
 
   async sendDiscord(text) {
-    if (!this.env.DISCORD_WEBHOOK_URL) throw new Error("DISCORD_WEBHOOK_URL не задан.");
-    const response = await fetch(this.env.DISCORD_WEBHOOK_URL, {
+    if (!this.env.DISCORD_BOT_TOKEN) throw new Error("DISCORD_BOT_TOKEN не задан.");
+    if (!this.env.DISCORD_CHANNEL_ID) throw new Error("DISCORD_CHANNEL_ID не задан.");
+    const response = await fetch(`https://discord.com/api/v10/channels/${this.env.DISCORD_CHANNEL_ID}/messages`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "authorization": `Bot ${this.env.DISCORD_BOT_TOKEN}`,
+        "content-type": "application/json"
+      },
       body: JSON.stringify({
-        username: "FunTime Raid Alert",
         content: text.slice(0, 1950),
         allowed_mentions: { parse: [] }
       })
     });
     if (!response.ok) {
       const detail = (await response.text()).slice(0, 180);
-      throw new Error(`Discord webhook HTTP ${response.status}: ${detail}`);
+      throw new Error(`Discord API HTTP ${response.status}: ${detail}`);
     }
   }
 
