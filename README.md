@@ -1,10 +1,10 @@
 # FunTime Raid Bridge
 
-Бесплатный мост: личные сообщения VK от сообщества `@funtime` → выбранный канал Discord.
+Настоящий Discord-бот, который пересылает уведомления о рейдах из личных сообщений VK в один выбранный канал Discord.
 
 ## Что пересылается
 
-- Только входящие сообщения из диалога с сообществом FunTime.
+- Только входящие сообщения из личного диалога с сообществом `@funtime`.
 - Только сообщения, содержащие метку `[Рейд]` (регистр не важен).
 - Исходящие сообщения, уведомления о входе и прочие сообщения сообщества игнорируются.
 - Повторная отправка уже обработанного сообщения предотвращается.
@@ -24,44 +24,51 @@
 
 Сам мост отбирает сообщения только от `@funtime`, но сам VK-токен технически имеет более широкий доступ, чем один диалог.
 
-## Секреты Cloudflare
+## Секреты и переменные Cloudflare
 
-В настройках Worker → Settings → Variables and Secrets → Add → Secret добавьте:
+В настройках Worker → Settings → Variables and Secrets добавьте:
 
-| Имя | Значение |
-|---|---|
-| `VK_ACCESS_TOKEN` | Пользовательский VK access token с правом `messages` |
-| `DISCORD_WEBHOOK_URL` | Webhook URL целевого Discord-канала |
-| `SETUP_PASSWORD` | Длинный случайный пароль для страницы управления мостом |
+| Имя | Тип | Значение |
+|---|---|---|
+| `VK_ACCESS_TOKEN` | Secret | Пользовательский VK access token с правом `messages` |
+| `DISCORD_BOT_TOKEN` | Secret | Токен Discord-бота из Developer Portal |
+| `DISCORD_CHANNEL_ID` | Variable | ID текстового канала Discord |
+| `SETUP_PASSWORD` | Secret | Длинный случайный пароль для страницы управления мостом |
 
 Не добавляйте эти значения в GitHub.
 
-## Развёртывание
+## Создание Discord-бота с телефона
 
-1. Создайте бесплатный аккаунт Cloudflare.
+1. Откройте [Discord Developer Portal](https://discord.com/developers/applications) и войдите в аккаунт.
+2. Нажмите **New Application**, назовите приложение `FunTime Raid Alert`.
+3. Откройте раздел **Bot** и нажмите **Add Bot** (если Discord предложит).
+4. Нажмите **Reset Token** / **Copy Token**. Сохраните токен в менеджере паролей. Не присылайте его в чат.
+5. Откройте **OAuth2 → URL Generator**.
+6. В Scopes отметьте только `bot`.
+7. В Bot Permissions отметьте `View Channels` и `Send Messages`.
+8. Откройте сгенерированную ссылку, выберите свой сервер и добавьте бота.
+9. В Discord включите Developer Mode: User Settings → Advanced → Developer Mode.
+10. Нажмите на нужный текстовый канал и выберите **Copy Channel ID**.
+
+Боту не нужны Administrator, Read Message History, Message Content Intent или команды. Он только отправляет уведомления в выбранный канал.
+
+## Развёртывание на бесплатном Cloudflare
+
+1. Создайте бесплатный аккаунт [Cloudflare](https://dash.cloudflare.com/).
 2. Откройте Workers & Pages и создайте Worker через подключение GitHub.
 3. Выберите репозиторий `anime-void-app/tgbot`.
-4. В качестве deploy command используйте `npx --yes wrangler@latest deploy`. Корневая папка проекта — `/`.
-5. После первого развёртывания добавьте три секрета из таблицы выше в настройках Worker.
-6. Если после добавления секретов Cloudflare не перезапустил Worker автоматически, выполните новое Deploy.
+4. Корневая папка проекта — `/`. В качестве deploy command используйте `npx --yes wrangler@latest deploy`.
+5. После первого развёртывания добавьте четыре значения из таблицы выше в Settings → Variables and Secrets. Для `DISCORD_CHANNEL_ID` используйте обычную переменную, остальные — Secrets.
+6. Если после добавления значений Cloudflare не перезапустил Worker автоматически, выполните новое Deploy.
 7. Откройте адрес Worker вида `https://имя-воркера.имя-аккаунта.workers.dev`.
 8. Введите `SETUP_PASSWORD`, нажмите «Тест Discord», затем «Запустить».
 
-## Создание Discord Webhook
-
-1. В Discord откройте настройки нужного текстового канала.
-2. Найдите Integrations → Webhooks → New Webhook.
-3. Назовите его `FunTime Raid Alert`, выберите нужный канал и скопируйте Webhook URL.
-4. Сохраните URL в Cloudflare как секрет `DISCORD_WEBHOOK_URL`.
-
-Webhook отправляет сообщения в канал от имени настроенного webhook-профиля. Это не отдельный Discord-аккаунт-бот и ему не требуется приглашение через OAuth.
-
 ## Управление
 
-Откройте адрес Worker:
+На странице Worker:
 - **Запустить** — начать мониторинг.
 - **Статус** — проверить состояние, последнюю ошибку и очередь.
-- **Тест Discord** — отправить тест в целевой канал.
+- **Тест Discord** — отправить тестовое сообщение в выбранный канал.
 - **Остановить** — прекратить мониторинг.
 
 ## Лимиты бесплатного тарифа
@@ -70,6 +77,6 @@ Durable Objects доступны на Workers Free. У бесплатного т
 
 ## Безопасность
 
-- Не публикуйте VK access token, Discord Webhook URL и SETUP_PASSWORD.
-- Если webhook URL случайно раскрыт, удалите/пересоздайте webhook в Discord.
+- Не публикуйте VK access token, Discord Bot Token и SETUP_PASSWORD.
+- Если Discord Bot Token случайно раскрыт, нажмите Reset Token в Developer Portal.
 - Если VK token раскрыт, отзовите его в настройках VK-приложения и выпустите новый.
