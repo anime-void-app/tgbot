@@ -73,7 +73,7 @@ export default {
     }
 
     const allowed = new Set(["/start", "/stop", "/status", "/test"]);
-    if (!allowed.has(url.pathname) || request.method !== "POST" {
+    if (!allowed.has(url.pathname) || request.method !== "POST") {
       return json({ error: "Not found" }, 404);
     }
 
