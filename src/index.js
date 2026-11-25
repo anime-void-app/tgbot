@@ -73,7 +73,7 @@ export default {
     }
 
     const allowed = new Set(["/start", "/stop", "/status", "/test"]);
-    if (!allowed.has(url.pathname) || request.method !== "POST) {
+    if (!allowed.has(url.pathname) || request.method !== "POST" {
       return json({ error: "Not found" }, 404);
     }
 
@@ -171,7 +171,7 @@ export class VkBridge {
       const delivered = await this.flushPending();
       const pending = await this.storage.get("pending") || [];
       nextDelay = delivered && pending.length === 0 ? 250 : 5000;
-      await this.storage.put("lastError", null);
+      if (delivered && pending.length === 0) await this.storage.delete("lastError");
     } catch (error) {
       await this.storage.put("lastError", String(error?.message || error).slice(0, 500));
       nextDelay = 5000;
