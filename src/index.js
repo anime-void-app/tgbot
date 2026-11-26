@@ -188,7 +188,7 @@ export class VkBridge {
       access_token: this.env.VK_ACCESS_TOKEN,
       v: API_VERSION
     });
-    const response = await fetch(`https://api.vk.com/method/${method}`, {
+    const response = await fetch(`https://api.vk.ru/method/${method}`, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
       body
